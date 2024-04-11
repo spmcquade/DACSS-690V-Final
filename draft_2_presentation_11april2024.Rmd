@@ -1,0 +1,195 @@
+---
+title: "DACSS 690V: Deliverable Draft #2"
+author: "Sean McQuade"
+date: "11 April, 2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+Who makes up the economic elite of the United States? This is the questions I aim to answer with my research team at the [World Elite Database](https://worldelitedatabase.org/). Using a [specific selection methodology](https://worldelitedatabase.org/wp-content/uploads/2024/03/USA-WED-Methodological-Report.pdf), we construct a unique database containing a number of descriptive variables on the economic elite in the US. 
+
+The plots below explore preliminary conclusions we can draw from our database so far.
+
+## Plot 1: Univariate plot for a numeric variable
+
+### Exploring the ideological patterns of the US economic elite
+
+We run a string-matching algorithm and entity-resolution process with Adam Bonica's [Database on Money in Politics, Ideology, and Elections (DIME)](https://data.stanford.edu/dime) to extract ideological estimations for our population based on campaign finance data. 
+
+```{r}
+library(readxl)
+rm(list = ls()) # clear memory 
+
+# Loading in main data file
+location='https://github.com/spmcquade/Deliverable01Draft2/raw/main/'
+file='unique_wed_dime_matches_merged.xlsx'
+link=paste0(location,file)
+
+local_file_path <- tempfile(fileext = ".xlsx") # set local path to download file
+download.file(url = link, destfile = local_file_path, mode = "wb") # download temp file to local path
+wed_data <- read_excel(local_file_path) # read in the file 
+unlink(local_file_path) # delete the temp file
+
+# Doing the same for secondary data file, which contains the ideological scores of well-known politicians
+file='us_politician_cfscores.xlsx'
+link=paste0(location,file)
+
+local_file_path <- tempfile(fileext = ".xlsx") # set local path to download file
+download.file(url = link, destfile = local_file_path, mode = "wb") # download temp file to local path
+us_politician_cfscores <- read_excel(local_file_path) # read in the file 
+unlink(local_file_path) # delete the temp file
+
+```
+
+
+Now, we can make out first plot:
+
+``` {r}
+library(ggplot2)
+density_plot <- ggplot(wed_data, aes(x = cfscore)) +
+  geom_density(color = "black", linewidth = 1.5) +
+  labs(title = "Ideological Distribution of US WED Population",
+       subtitle = "Based on US campaign contribution data 1979-2022",
+       caption = "Source: DIME (Bonica, 2023)\nNote: CFScores are ideology ideal point estimates based on campaign contribution data.\nScores of well-known politicians are included to provide additional context.",
+       x = "CFScore",
+       y = "Density") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, size = 17),
+        axis.text.y = element_text(hjust = 1, size = 17),
+        plot.title = element_text(color = "black", size = 20, face = "bold"),
+        plot.subtitle = element_text(color = "black", size = 18, face = "italic"),
+        plot.caption = element_text(color = "black", size = 12),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18)) +
+  geom_text(data = us_politician_cfscores, aes(x = score, y = -0.05, label = paste0("•", politician)), vjust = -0.5, hjust = 0, size = 5, color = "black", angle = 30)
+```
+
+
+```{r, fig.width=11, fig.height=8, dpi=300, echo=FALSE}
+density_plot
+```
+
+## Plot 2: Univariate plot for a categorical variable
+
+### Exploring the social origins of the US economic elite
+
+We also collect data on the social origins of US economic elites. We define social origins as the occupation of the subject's parent when the elite was 15 years old. We categorize the occupations according to specific criteria, which I outline in the table below:
+
+```{r, echo=FALSE, results='asis', message = FALSE}
+library(readxl)
+library(kableExtra)
+social_origin <- read_excel("C:/Users/user/Documents/spring_2024_classes/dacss_690_data_visualization/assignments/draft_2_presentation_11april2024/Deliverable01Draft2/data/social_origin_criteria.xlsx")
+
+kable(social_origin, caption = "Social Origin Criteria Descriptions", format = "html") %>%
+  kable_styling(full_width = FALSE)
+```
+
+This second plot explores the distribution of social origins of the US economic elite, based on the positions of both their fathers and their mothers:
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(forcats)
+rm(list = ls()) # clear memory 
+
+# Loading in main data file
+location='https://github.com/spmcquade/Deliverable01Draft2/raw/main/'
+file='social_origins_table.xlsx'
+link=paste0(location,file)
+
+local_file_path <- tempfile(fileext = ".xlsx") # set local path to download file
+download.file(url = link, destfile = local_file_path, mode = "wb") # download temp file to local path
+social_origins_data <- read_excel(local_file_path) # read in the file 
+unlink(local_file_path) # delete the temp file
+
+social_origins_data <- social_origins_data %>%
+  filter(class_scheme != "Missing")
+
+long_data <- pivot_longer(social_origins_data, 
+                          cols = c('Father', 'Mother'), 
+                          names_to = "Parent", 
+                          values_to = "Count")
+
+
+
+# Set the factor level order for Parent
+# This ensures "Father" is the first segment in the stacked bar
+long_data$Parent <- factor(long_data$Parent, levels = c("Father", "Mother"))
+long_data <- long_data %>% 
+  mutate(class_scheme = reorder(class_scheme, -Rank))
+
+
+# Define custom colors for Father and Mother
+custom_colors <- c("Father" = "black", "Mother" = "grey")
+
+social_origins <- ggplot(long_data, aes(x = Count, y = class_scheme, fill = Parent)) +
+  geom_col(position = position_stack(reverse = TRUE), width = 0.5) +
+  scale_fill_manual(values = custom_colors) +
+  labs(
+    title = "The Social Origins of the US Economic Elite",
+    subtitle = "Occupations of parents of elites at the age of 15",
+    caption = "Source: US WED Data",
+    y = "Class Scheme",
+    x = "Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, size = 12),
+        axis.text.y = element_text(hjust = 1, size = 12),
+        plot.title = element_text(color = "black", size = 15, face = "bold"),
+        plot.subtitle = element_text(color = "black", size = 13, face = "italic"),
+        plot.caption = element_text(color = "black", size = 10),
+        axis.title.x = element_text(size = 13,),
+        axis.title.y = element_text(size = 13))
+
+```
+
+```{r, fig.width=11, fig.height=8, dpi=300, echo=FALSE}
+social_origins
+```
+
+## Plot 3: Correlative plot
+
+### The relationship between elite age and ideology
+
+The final plot explores if there is any noticeable correlation between elite age and ideology:
+
+``` {r}
+rm(list = ls()) # clear memory 
+
+# Loading in main data file
+location='https://github.com/spmcquade/Deliverable01Draft2/raw/main/'
+file='unique_wed_dime_matches_merged.xlsx'
+link=paste0(location,file)
+
+local_file_path <- tempfile(fileext = ".xlsx") # set local path to download file
+download.file(url = link, destfile = local_file_path, mode = "wb") # download temp file to local path
+wed_data <- read_excel(local_file_path) # read in the file 
+unlink(local_file_path) # delete the temp file
+
+
+library(ggplot2)
+scatter_plot <- ggplot(subset(wed_data, !is.na(age)), aes(x = age, y = cfscore)) +
+  geom_point(color = "black", size = 3) +
+  labs(title = "Age and Ideology",
+       subtitle = "Based on US campaign contribution data 1979-2022",
+       caption = "Source: DIME (Bonica, 2023) and USA WED Data\nNote: CFScores are ideology ideal point estimates based on campaign contribution data.",
+       x = "Age",
+       y = "CFScore") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, size = 17),
+        axis.text.y = element_text(hjust = 1, size = 17),
+        plot.title = element_text(color = "black", size = 20, face = "bold"),
+        plot.subtitle = element_text(color = "black", size = 18, face = "italic"),
+        plot.caption = element_text(color = "black", size = 12),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18))
+
+```
+
+```{r, fig.width=11, fig.height=8, dpi=300, echo=FALSE}
+scatter_plot
+```
