@@ -1,0 +1,43 @@
+---
+title: 'Sean McQuade Final Deliverables: DACSS 690V'
+bibliography: dacss690v_references.bib
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+## Intro {.sidebar}
+
+What are the characteristics the economic elite of the United States? This is the questions I aim to answer with my research team at the [World Elite Database](https://worldelitedatabase.org/). Using a [specific selection methodology](https://worldelitedatabase.org/wp-content/uploads/2024/03/USA-WED-Methodological-Report.pdf) (@young_world_2024), we construct a unique database containing a number of descriptive variables on the economic elite in the US. We combine these data with the Adam Bonica's DIME Database (@bonica_database_2023) to derive insights into the ideological patterns of individuals in our population.
+
+The plots on this dashboard explore preliminary conclusions we can draw from our database so far.
+
+### References
+<div id="refs"></div>
+
+## Column {data-width="450"}
+
+
+```{r}
+readRDS("C:/Users/user/Documents/spring_2024_classes/dacss_690_data_visualization/assignments/draft_2_presentation_11april2024/DACSS-690V-Final/deliverable_1.RDS")
+```
+
+
+```{r}
+readRDS("C:/Users/user/Documents/spring_2024_classes/dacss_690_data_visualization/assignments/draft_2_presentation_11april2024/DACSS-690V-Final/deliverable_2.RDS")
+```
+
+## Column {data-width="450"}
+
+```{r}
+readRDS("C:/Users/user/Documents/spring_2024_classes/dacss_690_data_visualization/assignments/draft_2_presentation_11april2024/DACSS-690V-Final/deliverable_3.RDS")
+```
+
+
+```{r}
+readRDS("C:/Users/user/Documents/spring_2024_classes/dacss_690_data_visualization/assignments/draft_2_presentation_11april2024/DACSS-690V-Final/deliverable_4.RDS")
+```
